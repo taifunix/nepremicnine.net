@@ -1,8 +1,5 @@
-﻿from nepremicnine_bot.classifier import classify_listing
-from nepremicnine_bot.config import RuleSet, SearchSource
-from nepremicnine_bot.notifier import format_realtime_message
+﻿from nepremicnine_bot.notifier import format_realtime_message
 from nepremicnine_bot.runner import poll_search_source, process_listing_event
-from nepremicnine_bot.storage import Database
 
 
 class StubFetcher:
@@ -53,6 +50,9 @@ def test_process_listing_event_emits_price_drop():
 
 
 def test_poll_search_source_sends_new_private_listing(tmp_path):
+    from nepremicnine_bot.config import RuleSet, SearchSource
+    from nepremicnine_bot.storage import Database
+
     db = Database(tmp_path / "app.db")
     db.initialize()
     notifier = StubNotifier()
@@ -99,3 +99,41 @@ def test_cli_supports_poll_digest_and_bot_modes():
     assert parser.parse_args(["poll"]).command == "poll"
     assert parser.parse_args(["digest"]).command == "digest"
     assert parser.parse_args(["bot"]).command == "bot"
+
+
+
+def test_main_poll_runs_pipeline(monkeypatch, tmp_path, capsys):
+    import nepremicnine_bot.cli as cli
+    from nepremicnine_bot.config import RuleSet, SearchSource
+
+    class FakeSettings:
+        db_path = str(tmp_path / "app.db")
+        fetch_mode = "browser"
+        rules = RuleSet()
+        telegram_bot_token = "token"
+        telegram_chat_id = "123"
+
+        def load_search_sources(self):
+            return [SearchSource(name="s1", url="https://search.example")]
+
+    class FakeNotifier:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+    calls = []
+
+    def fake_poll(source, fetcher, db, notifier, rules):
+        calls.append((source.name, fetcher, db, notifier, rules))
+        return 2
+
+    monkeypatch.setattr(cli, "Settings", FakeSettings)
+    monkeypatch.setattr(cli, "build_fetcher", lambda mode: f"fetcher:{mode}")
+    monkeypatch.setattr(cli, "TelegramNotifier", FakeNotifier)
+    monkeypatch.setattr(cli, "poll_search_source", fake_poll)
+
+    cli.main(["poll"])
+    out = capsys.readouterr().out
+
+    assert len(calls) == 1
+    assert calls[0][0] == "s1"
+    assert "Sent 2 notifications" in out

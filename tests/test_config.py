@@ -1,4 +1,6 @@
-﻿from nepremicnine_bot.config import Settings
+﻿import json
+
+from nepremicnine_bot.config import Settings
 from nepremicnine_bot.models import Listing, ListingEvaluation
 
 
@@ -24,6 +26,37 @@ def test_settings_load_sources_and_rules(tmp_path, monkeypatch):
     assert settings.telegram_chat_id == "123"
     assert settings.search_sources[0].name == "lj-center"
     assert "2 spalnici" in settings.rules.two_bedroom_positive
+
+
+def test_settings_load_sources_from_file(tmp_path, monkeypatch):
+    monkeypatch.setenv("NEPREMICNINE_BOT_TOKEN", "token")
+    monkeypatch.setenv("NEPREMICNINE_CHAT_ID", "123")
+    monkeypatch.setenv("NEPREMICNINE_DB_PATH", str(tmp_path / "app.db"))
+
+    sources_file = tmp_path / "sources.json"
+    sources_file.write_text(
+        json.dumps(
+            [
+                {
+                    "name": "saved-search",
+                    "url": "https://www.nepremicnine.net/nepremicnine.html",
+                    "enabled": True,
+                    "mode": ["realtime-private"],
+                    "publication_window_strategy": "today",
+                    "location_blacklist": ["siska"],
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("NEPREMICNINE_SEARCH_SOURCES_FILE", str(sources_file))
+
+    settings = Settings()
+    sources = settings.load_search_sources()
+
+    assert len(sources) == 1
+    assert sources[0].name == "saved-search"
+    assert sources[0].location_blacklist == ["siska"]
 
 
 def test_listing_defaults_and_evaluation_flags():

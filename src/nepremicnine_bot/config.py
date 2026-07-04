@@ -1,4 +1,7 @@
-﻿from pydantic import AliasChoices, BaseModel, Field
+﻿import json
+from pathlib import Path
+
+from pydantic import AliasChoices, BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,6 +36,14 @@ class Settings(BaseSettings):
         default=5,
         validation_alias=AliasChoices("NEPREMICNINE_POLL_MINUTES", "POLL_MINUTES"),
     )
+    fetch_mode: str = Field(
+        default="browser",
+        validation_alias=AliasChoices("NEPREMICNINE_FETCH_MODE", "FETCH_MODE"),
+    )
+    search_sources_file: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("NEPREMICNINE_SEARCH_SOURCES_FILE", "SEARCH_SOURCES_FILE"),
+    )
     search_sources: list[SearchSource] = Field(default_factory=list)
     rules: RuleSet = Field(default_factory=RuleSet)
 
@@ -43,3 +54,11 @@ class Settings(BaseSettings):
     @property
     def telegram_chat_id(self) -> str:
         return self.chat_id
+
+    def load_search_sources(self) -> list[SearchSource]:
+        if self.search_sources:
+            return self.search_sources
+        if not self.search_sources_file:
+            return []
+        data = json.loads(Path(self.search_sources_file).read_text(encoding="utf-8"))
+        return [SearchSource.model_validate(item) for item in data]
