@@ -63,6 +63,28 @@ class Database:
             )
             return int(cursor.lastrowid)
 
+    def get_listing_by_site_id(self, site_id: str) -> Listing | None:
+        with self.connect() as conn:
+            row = conn.execute(
+                """
+                SELECT id, site_id, canonical_url, title, price_current, area, location_text
+                FROM listings
+                WHERE site_id = ?
+                """,
+                (site_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return Listing(
+            id=int(row[0]),
+            site_id=str(row[1]),
+            url=str(row[2]),
+            title=str(row[3]),
+            price_current=int(row[4]),
+            area=float(row[5]),
+            location_text=str(row[6]),
+        )
+
     def record_price(self, listing_id: int, new_price: int) -> str:
         with self.connect() as conn:
             row = conn.execute("SELECT price_current FROM listings WHERE id = ?", (listing_id,)).fetchone()
