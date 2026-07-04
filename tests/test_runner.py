@@ -1,5 +1,6 @@
 ﻿from nepremicnine_bot.notifier import format_realtime_message
 from nepremicnine_bot.runner import process_listing_event
+from nepremicnine_bot.cli import build_parser
 
 
 
@@ -30,3 +31,12 @@ def test_process_listing_event_emits_new_listing():
 def test_process_listing_event_emits_price_drop():
     event = process_listing_event(existing_price=1300, new_price=1200, passes_realtime=True)
     assert event == "price_drop"
+
+
+
+def test_cli_supports_poll_digest_and_bot_modes():
+    parser = build_parser()
+
+    assert parser.parse_args(["poll"]).command == "poll"
+    assert parser.parse_args(["digest"]).command == "digest"
+    assert parser.parse_args(["bot"]).command == "bot"
