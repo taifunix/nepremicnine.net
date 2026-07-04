@@ -1,0 +1,1 @@
+"""Nepremicnine bot package."""

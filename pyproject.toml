@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nepremicnine-bot"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "beautifulsoup4>=4.12",
+  "httpx>=0.28",
+  "pydantic>=2.8",
+  "pydantic-settings>=2.3",
+  "python-telegram-bot>=21.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3"]
+
+[project.scripts]
+nepremicnine-bot = "nepremicnine_bot.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
