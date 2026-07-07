@@ -32,9 +32,12 @@ class TelegramNotifier:
         self.bot_token = bot_token
         self.chat_id = chat_id
 
-    def send_message(self, text: str) -> None:
+    def send_message(self, text: str, parse_mode: str | None = None) -> None:
+        payload = {"chat_id": self.chat_id, "text": text, "disable_web_page_preview": True}
+        if parse_mode is not None:
+            payload["parse_mode"] = parse_mode
         httpx.post(
             f"https://api.telegram.org/bot{self.bot_token}/sendMessage",
-            json={"chat_id": self.chat_id, "text": text, "disable_web_page_preview": True},
+            json=payload,
             timeout=10.0,
         ).raise_for_status()

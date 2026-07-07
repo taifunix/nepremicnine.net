@@ -1,0 +1,12 @@
+﻿[
+  {
+    "name": "example-search",
+    "url": "https://www.nepremicnine.net/nepremicnine.html",
+    "full_url": "https://www.nepremicnine.net/nepremicnine.html",
+    "daily_url": "https://www.nepremicnine.net/24ur/nepremicnine.html",
+    "enabled": true,
+    "mode": ["realtime-private"],
+    "publication_window_strategy": "today",
+    "location_blacklist": []
+  }
+]
